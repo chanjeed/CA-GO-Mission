@@ -12,6 +12,12 @@ type User struct {
 	Token string `json:"token"`
 }
 
+type Character struct {
+	ID int `json:"userCharacterID"`
+	CharacterID int `json:"characterID"`
+	Name string `json:"name"`
+}
+
 
 func (data *Data) GetUserName(userToken string) (*User, error) {
 	const sqlStr = `SELECT name FROM Users WHERE token=?`
@@ -22,7 +28,7 @@ func (data *Data) GetUserName(userToken string) (*User, error) {
 	err := data.db.QueryRow(sqlStr, userToken).Scan(&user.Name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no user with name %d", name)
+			return nil, fmt.Errorf("no user with name %s", name)
 		}
 		return nil, err
 	}
@@ -54,4 +60,29 @@ func (data *Data) UpdateUser(userName string,userToken string) () {
     upd.Exec(userName,userToken)
 
 	return
+}
+
+func (data *Data) GetCharacterList(userToken string) ([]*Character,error) {
+	const sqlStr = `SELECT c.*,d.name from (SELECT a.id,a.characterId from UserCharacters AS a JOIN Users AS b ON a.userId=b.id WHERE b.token=? ORDER BY a.ts DESC) AS c JOIN Characters AS d ON c.characterID=d.id;`
+	
+
+	
+	var characterList []*Character
+	rows, err := data.db.Query(sqlStr, userToken)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var character Character
+
+		err := rows.Scan(&character.ID,&character.CharacterID,&character.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		characterList = append(characterList, &character)
+	}
+
+	return characterList, nil
 }

@@ -28,6 +28,7 @@ func main() {
 	http.HandleFunc("/user/create", data.UserCreate)
 	http.HandleFunc("/user/get", data.UserGet)
 	http.HandleFunc("/user/update", data.UserUpdate)
+	http.HandleFunc("/character/list", data.CharacterList)
 
 
 	port := os.Getenv("PORT")

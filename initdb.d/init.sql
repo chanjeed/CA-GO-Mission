@@ -32,7 +32,9 @@ characterId INT NOT NULL,
 ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )DEFAULT CHARACTER SET=utf8;
  
-
+INSERT INTO UserCharacters (userId,characterId) VALUES (1,1);
+INSERT INTO UserCharacters (userId,characterId) VALUES (1,2);
+INSERT INTO UserCharacters (userId,characterId) VALUES (1,3);
 
 DROP TABLE IF EXISTS Gachas;
   

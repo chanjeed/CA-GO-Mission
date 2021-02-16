@@ -21,6 +21,10 @@ type UserName struct {
 	Name string `json:"name"`
 }
 
+type CharacterList struct {
+	Characters []*Character `json:"characters"`
+}
+
 type UserToken struct {
 	Token string `json:"token"`
 }
@@ -143,3 +147,33 @@ func (data *Data) UserUpdate(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+
+func (data *Data) CharacterList(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
+		return
+	}
+
+	userToken := r.Header.Get("x-token")
+
+	if userToken == "" {
+		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "token is required"})
+		return
+	}
+
+
+	characterList, err := data.GetCharacterList(userToken)
+	if err != nil {
+		ResponseByJSON(w, http.StatusInternalServerError, ErrorMessage{Message: err.Error()})
+		return
+	}
+
+
+	SetHeaders(w)
+	w.WriteHeader(http.StatusOK)
+	response := CharacterList{
+		Characters : characterList,
+	}
+	json.NewEncoder(w).Encode(response)
+	return
+}
