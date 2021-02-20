@@ -21,6 +21,10 @@ type UserName struct {
 	Name string `json:"name"`
 }
 
+type Times struct {
+	Times int `json:"times"`
+}
+
 type CharacterList struct {
 	Characters []*Character `json:"characters"`
 }
@@ -45,6 +49,26 @@ func GenerateToken(length int) string {
     }
     return hex.EncodeToString(b)
 }
+
+func GetOneGacha(GachaList []*Gacha) (int) {
+    
+	const min int = 1
+	sum := 0
+	for _, gacha := range GachaList {
+    	sum+=gacha.Number
+	}
+	currentSum := 0
+	randomNum := rand.Intn(sum - min + 1) + min
+	for _, gacha := range GachaList {
+    	
+    	
+		currentSum+=gacha.Number
+		if randomNum <= currentSum {
+			return gacha.CharacterID
+		}
+	}
+}
+
 
 
 func SetHeaders(w http.ResponseWriter) {
@@ -173,6 +197,42 @@ func (data *Data) CharacterList(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	response := CharacterList{
 		Characters : characterList,
+	}
+	json.NewEncoder(w).Encode(response)
+	return
+}
+
+func (data *Data) GachaDraw(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
+		return
+	}
+
+	userToken := r.Header.Get("x-token")
+	var times Times
+	err := json.NewDecoder(r.Body).Decode(&times)
+    if err != nil {
+        ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "fail to decode request"})
+        return
+    }
+	
+	GachaList := data.GetGachaList()
+
+	var CharacterList []*Character
+
+	for i := 1; i <= times.Times; i++ {
+		var character Character
+		var characterId int
+		characterId = GetOneGacha(GachaList)
+		character = data.GetCharacterInfo(characterId)
+		CharacterList = append(CharacterList, &character)
+	}
+	
+
+	SetHeaders(w)
+	w.WriteHeader(http.StatusOK)
+	response := UserToken{
+		Token: token,
 	}
 	json.NewEncoder(w).Encode(response)
 	return

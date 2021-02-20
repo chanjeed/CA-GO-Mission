@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -19,6 +21,9 @@ const (
 
 
 func main() {
+
+	rand.Seed(time.Now().UTC().UnixNano())
+	
 	db, connectionError := sql.Open(DRIVER_NAME, DATA_SOURCE_NAME)
         if connectionError != nil {
                 log.Fatal("error connecting to database: ", connectionError)
@@ -29,6 +34,7 @@ func main() {
 	http.HandleFunc("/user/get", data.UserGet)
 	http.HandleFunc("/user/update", data.UserUpdate)
 	http.HandleFunc("/character/list", data.CharacterList)
+	http.HandleFunc("/gacha/draw", data.GachaDraw)
 
 
 	port := os.Getenv("PORT")

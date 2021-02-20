@@ -18,6 +18,10 @@ type Character struct {
 	Name string `json:"name"`
 }
 
+type Gacha struct {
+	CharacterID int `json:"characterID"`
+	Number int `json:"number"`
+}
 
 func (data *Data) GetUserName(userToken string) (*User, error) {
 	const sqlStr = `SELECT name FROM Users WHERE token=?`
@@ -85,4 +89,50 @@ func (data *Data) GetCharacterList(userToken string) ([]*Character,error) {
 	}
 
 	return characterList, nil
+}
+
+func (data *Data) GetGachaList() ([]*Gacha,error) {
+	const sqlStr = `SELECT characterId,number from Gachas;`
+		
+	var GachaList []*Gacha
+	rows, err := data.db.Query(sqlStr)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var gacha Gacha
+
+		err := rows.Scan(&gacha.CharacterID,&gacha.Number)
+		if err != nil {
+			return nil, err
+		}
+
+		GachaList = append(GachaList, &gacha)
+	}
+
+	return GachaList, nil
+}
+
+func (data *Data) GetCharacterInfo() ([]*Gacha,error) {
+	const sqlStr = `INSERT characterId,number from Gachas;`
+		
+	var GachaList []*Gacha
+	rows, err := data.db.Query(sqlStr)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var gacha Gacha
+
+		err := rows.Scan(&gacha.CharacterID,&gacha.Number)
+		if err != nil {
+			return nil, err
+		}
+
+		GachaList = append(GachaList, &gacha)
+	}
+
+	return GachaList, nil
 }
