@@ -6,7 +6,7 @@
 $ docker-compose up -d
 
 # 起動したコンテナにログイン
-$ docker exec -it Docker-mysql_mysql_1 bash -p
+$ docker exec -it db bash
 
 # MySQLを起動
 $ mysql -u root -p  <pass>
