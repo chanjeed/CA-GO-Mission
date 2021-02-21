@@ -1,8 +1,9 @@
-package main
+package database
 
 import (
 	"database/sql"
 	"fmt"
+	"game/handler/user"
 	"log"
 )
 
@@ -12,13 +13,13 @@ type User struct {
 	Token string `json:"token"`
 }
 
-func (data *Data) GetUserName(userToken string) (*User, error) {
+func GetUserName(data *user.Data, userToken string) (*User, error) {
 	const sqlStr = `SELECT name FROM Users WHERE token=?`
 
 	var name string
 
 	var user User
-	err := data.db.QueryRow(sqlStr, userToken).Scan(&user.Name)
+	err := data.DB.QueryRow(sqlStr, userToken).Scan(&user.Name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("no user with name %d", name)
@@ -29,10 +30,10 @@ func (data *Data) GetUserName(userToken string) (*User, error) {
 	return &user, nil
 }
 
-func (data *Data) CreateUser(userName string, userToken string) {
+func CreateUser(data *user.Data, userName string, userToken string) {
 	const sqlStr = `INSERT INTO Users (name,token) VALUES (?,?);`
 
-	ins, err := data.db.Prepare(sqlStr)
+	ins, err := data.DB.Prepare(sqlStr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,10 +42,10 @@ func (data *Data) CreateUser(userName string, userToken string) {
 	return
 }
 
-func (data *Data) UpdateUser(userName string, userToken string) {
+func UpdateUser(data *user.Data, userName string, userToken string) {
 	const sqlStr = `UPDATE Users SET name= ? WHERE token=?;`
 
-	upd, err := data.db.Prepare(sqlStr)
+	upd, err := data.DB.Prepare(sqlStr)
 	if err != nil {
 		log.Fatal(err)
 	}

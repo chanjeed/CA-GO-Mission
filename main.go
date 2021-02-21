@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"game/handler/user"
 	"log"
 	"net/http"
 	"os"
@@ -23,7 +24,8 @@ func main() {
 		log.Fatal("error connecting to database: ", connectionError)
 	}
 
-	data := NewData(db)
+
+	data := user.NewData(db)
 	http.HandleFunc("/user/create", data.UserCreate)
 	http.HandleFunc("/user/get", data.UserGet)
 	http.HandleFunc("/user/update", data.UserUpdate)

@@ -1,44 +1,21 @@
-package main
+package user
 
 import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"game/database"
+	"game/handler"
 	"net/http"
 )
 
 type Data struct {
-	db *sql.DB
-}
-
-type Response struct {
-	Result string      `json:"result"`
-	Data   interface{} `json:"data"`
-}
-
-type UserName struct {
-	Name string `json:"name"`
-}
-
-type UserToken struct {
-	Token string `json:"token"`
-}
-
-type ErrorMessage struct {
-	Message string `json:"message"`
+	DB *sql.DB
 }
 
 func NewData(db *sql.DB) *Data {
-	return &Data{db: db}
-}
-
-func GenerateToken(length int) string {
-	b := make([]byte, length)
-	if _, err := rand.Read(b); err != nil {
-		return ""
-	}
-	return hex.EncodeToString(b)
+	return &Data{DB: db}
 }
 
 func SetHeaders(w http.ResponseWriter) {
@@ -50,7 +27,7 @@ func SetHeaders(w http.ResponseWriter) {
 func ResponseByJSON(w http.ResponseWriter, code int, data interface{}) {
 	SetHeaders(w)
 	w.WriteHeader(code)
-	response := Response{
+	response := handler.Response{
 		Result: http.StatusText(code),
 		Data:   data,
 	}
@@ -67,15 +44,15 @@ func (data *Data) UserCreate(w http.ResponseWriter, r *http.Request) {
 	var userName UserName
 	err := json.NewDecoder(r.Body).Decode(&userName)
 	if err != nil {
-		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "fail to decode request"})
+		ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "fail to decode request"})
 		return
 	}
 	if userName.Name == "" {
-		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "name is required"})
+		ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "name is required"})
 		return
 	}
 	token := GenerateToken(10)
-	data.CreateUser(userName.Name, token)
+	database.CreateUser(data, userName.Name, token)
 
 	SetHeaders(w)
 	w.WriteHeader(http.StatusOK)
@@ -95,13 +72,13 @@ func (data *Data) UserGet(w http.ResponseWriter, r *http.Request) {
 	userToken := r.Header.Get("x-token")
 
 	if userToken == "" {
-		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "token is required"})
+		ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "token is required"})
 		return
 	}
 
-	user, err := data.GetUserName(userToken)
+	user, err := database.GetUserName(data, userToken)
 	if err != nil {
-		ResponseByJSON(w, http.StatusInternalServerError, ErrorMessage{Message: err.Error()})
+		ResponseByJSON(w, http.StatusInternalServerError, handler.ErrorMessage{Message: err.Error()})
 		return
 	}
 
@@ -123,15 +100,15 @@ func (data *Data) UserUpdate(w http.ResponseWriter, r *http.Request) {
 	var userName UserName
 	err := json.NewDecoder(r.Body).Decode(&userName)
 	if err != nil {
-		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "fail to decode request"})
+		ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "fail to decode request"})
 		return
 	}
 	if userName.Name == "" {
-		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "name is required"})
+		ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "name is required"})
 		return
 	}
 
-	data.UpdateUser(userName.Name, userToken)
+	database.UpdateUser(data, userName.Name, userToken)
 
 	ResponseByJSON(w, http.StatusOK, nil)
 	return
