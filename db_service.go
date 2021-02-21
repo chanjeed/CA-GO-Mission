@@ -7,17 +7,16 @@ import (
 )
 
 type User struct {
-	ID int `json:"id"`
-	Name string `json:"name"`
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
 	Token string `json:"token"`
 }
 
-
 func (data *Data) GetUserName(userToken string) (*User, error) {
 	const sqlStr = `SELECT name FROM Users WHERE token=?`
-	
+
 	var name string
-	
+
 	var user User
 	err := data.db.QueryRow(sqlStr, userToken).Scan(&user.Name)
 	if err != nil {
@@ -30,28 +29,26 @@ func (data *Data) GetUserName(userToken string) (*User, error) {
 	return &user, nil
 }
 
-func (data *Data) CreateUser(userName string,userToken string) () {
+func (data *Data) CreateUser(userName string, userToken string) {
 	const sqlStr = `INSERT INTO Users (name,token) VALUES (?,?);`
 
-	
 	ins, err := data.db.Prepare(sqlStr)
-    if err != nil {
-        log.Fatal(err)
-    }
-    ins.Exec(userName,userToken)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ins.Exec(userName, userToken)
 
 	return
 }
 
-func (data *Data) UpdateUser(userName string,userToken string) () {
+func (data *Data) UpdateUser(userName string, userToken string) {
 	const sqlStr = `UPDATE Users SET name= ? WHERE token=?;`
 
-	
 	upd, err := data.db.Prepare(sqlStr)
-    if err != nil {
-        log.Fatal(err)
-    }
-    upd.Exec(userName,userToken)
+	if err != nil {
+		log.Fatal(err)
+	}
+	upd.Exec(userName, userToken)
 
 	return
 }
