@@ -1,12 +1,11 @@
 package user
 
 import (
-	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
 	"encoding/json"
 	"game/database"
 	"game/handler"
+	"game/util"
 	"net/http"
 )
 
@@ -51,7 +50,7 @@ func (data *Data) UserCreate(w http.ResponseWriter, r *http.Request) {
 		ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "name is required"})
 		return
 	}
-	token := GenerateToken(10)
+	token := util.GenerateToken(10)
 	database.CreateUser(data, userName.Name, token)
 
 	SetHeaders(w)
