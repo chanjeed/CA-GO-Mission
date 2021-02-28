@@ -1,42 +1,33 @@
 package user
 
 import (
-	"database/sql"
 	"encoding/json"
 	"game/database"
-	"game/handler"
 	"game/util"
 	"net/http"
 )
 
-type Data struct {
-	DB *sql.DB
-}
-
-func NewData(db *sql.DB) *Data {
-	return &Data{DB: db}
-}
-
-func (data *Data) UserCreate(w http.ResponseWriter, r *http.Request) {
+func UserCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		handler.ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
+		ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
 		return
 	}
 
 	var userName UserName
 	err := json.NewDecoder(r.Body).Decode(&userName)
 	if err != nil {
-		handler.ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "fail to decode request"})
+		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "fail to decode request"})
 		return
 	}
 	if userName.Name == "" {
-		handler.ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "name is required"})
+		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "name is required"})
 		return
 	}
 	token := util.GenerateToken(10)
-	database.CreateUser(data, userName.Name, token)
 
-	handler.SetHeaders(w)
+	database.CreateUser(userName.Name, token)
+
+	SetHeaders(w)
 	w.WriteHeader(http.StatusOK)
 	response := UserToken{
 		Token: token,
@@ -45,26 +36,26 @@ func (data *Data) UserCreate(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (data *Data) UserGet(w http.ResponseWriter, r *http.Request) {
+func UserGet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		handler.ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
+		ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
 		return
 	}
 
 	userToken := r.Header.Get("x-token")
 
 	if userToken == "" {
-		handler.ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "token is required"})
+		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "token is required"})
 		return
 	}
 
-	user, err := database.GetUserName(data, userToken)
+	user, err := database.GetUserName(userToken)
 	if err != nil {
-		handler.ResponseByJSON(w, http.StatusInternalServerError, handler.ErrorMessage{Message: err.Error()})
+		ResponseByJSON(w, http.StatusInternalServerError, ErrorMessage{Message: err.Error()})
 		return
 	}
 
-	handler.SetHeaders(w)
+	SetHeaders(w)
 	w.WriteHeader(http.StatusOK)
 	response := UserName{
 		Name: user.Name,
@@ -73,25 +64,25 @@ func (data *Data) UserGet(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (data *Data) UserUpdate(w http.ResponseWriter, r *http.Request) {
+func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		handler.ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
+		ResponseByJSON(w, http.StatusMethodNotAllowed, nil)
 		return
 	}
 	userToken := r.Header.Get("x-token")
 	var userName UserName
 	err := json.NewDecoder(r.Body).Decode(&userName)
 	if err != nil {
-		handler.ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "fail to decode request"})
+		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "fail to decode request"})
 		return
 	}
 	if userName.Name == "" {
-		handler.ResponseByJSON(w, http.StatusBadRequest, handler.ErrorMessage{Message: "name is required"})
+		ResponseByJSON(w, http.StatusBadRequest, ErrorMessage{Message: "name is required"})
 		return
 	}
 
-	database.UpdateUser(data, userName.Name, userToken)
+	database.UpdateUser(userName.Name, userToken)
 
-	handler.ResponseByJSON(w, http.StatusOK, nil)
+	ResponseByJSON(w, http.StatusOK, nil)
 	return
 }

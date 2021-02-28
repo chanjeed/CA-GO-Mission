@@ -3,9 +3,25 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"game/handler/user"
 	"log"
 )
+
+var DB *sql.DB
+
+// DB の接続情報
+const (
+	DriverName = "mysql" // ドライバ名(mysql固定)
+	// user:password@tcp(container-name:port)/dbname ※mysql はデフォルトで用意されているDB
+	DataSourceName = "root:mysql@tcp(127.0.0.1:3306)/game"
+)
+
+func ConnectToMySQL() {
+	db, connectionError := sql.Open(DriverName, DataSourceName)
+	if connectionError != nil {
+		log.Fatal("error connecting to database: ", connectionError)
+	}
+	DB = db
+}
 
 type User struct {
 	ID    int    `json:"id"`
@@ -13,13 +29,13 @@ type User struct {
 	Token string `json:"token"`
 }
 
-func GetUserName(data *user.Data, userToken string) (*User, error) {
+func GetUserName(userToken string) (*User, error) {
 	const sqlStr = `SELECT name FROM Users WHERE token=?`
 
 	var name string
 
 	var user User
-	err := data.DB.QueryRow(sqlStr, userToken).Scan(&user.Name)
+	err := DB.QueryRow(sqlStr, userToken).Scan(&user.Name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("no user with name %d", name)
@@ -30,10 +46,10 @@ func GetUserName(data *user.Data, userToken string) (*User, error) {
 	return &user, nil
 }
 
-func CreateUser(data *user.Data, userName string, userToken string) {
+func CreateUser(userName string, userToken string) {
 	const sqlStr = `INSERT INTO Users (name,token) VALUES (?,?);`
 
-	ins, err := data.DB.Prepare(sqlStr)
+	ins, err := DB.Prepare(sqlStr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,10 +58,10 @@ func CreateUser(data *user.Data, userName string, userToken string) {
 	return
 }
 
-func UpdateUser(data *user.Data, userName string, userToken string) {
+func UpdateUser(userName string, userToken string) {
 	const sqlStr = `UPDATE Users SET name= ? WHERE token=?;`
 
-	upd, err := data.DB.Prepare(sqlStr)
+	upd, err := DB.Prepare(sqlStr)
 	if err != nil {
 		log.Fatal(err)
 	}
